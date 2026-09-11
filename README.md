@@ -14,7 +14,7 @@ A Chrome extension that provides an AI-powered assistant to help you navigate an
 - 📜 Content Extraction: Extract page content in various formats (text, markdown)
 - 🔄 Navigation: Search Google, navigate to URLs, and go back in history
 - ⬆️ Scrolling: Control page scrolling with natural commands
-- ⚡ Multiple AI Providers: Support for both OpenAI and Google Gemini
+- ⚡ AI Providers: Support for local LM Studio and DeepSeek API tool calling
 
 ## Available Actions
 
@@ -36,16 +36,17 @@ A Chrome extension that provides an AI-powered assistant to help you navigate an
 ## Configuration
 
 1. Click the extension icon in Chrome to open the options page
-2. Choose your preferred AI provider (OpenAI or Google Gemini)
+2. Choose LM Studio (local) or DeepSeek API
 3. Configure the API settings:
 
-### For OpenAI:
-- Enter your OpenAI API key
-- Optionally customize the model (default: gpt-4o-mini)
+### For LM Studio:
+- Start the OpenAI-compatible local server
+- Enter the endpoint and loaded model name
 
-### For Google Gemini:
-- Enter your Gemini API key
-- Optionally customize the model (default: gemini-2.0-flash-exp)
+### For DeepSeek API:
+- Enter your DeepSeek API key
+- Choose Standard mode for fastest responses or Thinking mode with low, high, or maximum reasoning effort
+- DeepSeek is DOM-only in this extension. Screenshots are not sent, so visual layout and image-only controls are unavailable.
 
 ## Usage
 
@@ -78,7 +79,7 @@ Here are some example commands you can try:
 ## Requirements
 
 - Google Chrome browser
-- API key from either OpenAI or Google Gemini
+- LM Studio or DeepSeek API access
 - Active internet connection
 
 ## Technical Details

@@ -1,3 +1,9 @@
 {
-  "svg.preview.background": "editor"
+  "svg.preview.background": "editor",
+  "chat.tools.terminal.autoApprove": {
+    "/^node --test test/\\*\\.test\\.js$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  }
 }

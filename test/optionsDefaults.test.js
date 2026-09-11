@@ -30,8 +30,9 @@ test('options.js exposes expected DEFAULT_OPTIONS values', async () => {
 
   const defaults = context.DEFAULT_OPTIONS;
 
-  assert.strictEqual(defaults.provider, 'openai');
-  assert.strictEqual(defaults.openai_model, 'gpt-4o-mini');
-  assert.strictEqual(defaults.gemini_model, 'gemini-2.0-flash-exp');
-  assert.strictEqual(defaults.ollama_model, 'llama3.2-vision');
+  assert.strictEqual(defaults.provider, 'lmstudio');
+  assert.strictEqual(defaults.lmstudio_endpoint, 'http://localhost:1234');
+  assert.strictEqual(defaults.deepseek_reasoning_mode, 'standard');
+  assert.strictEqual(defaults.lmstudio_model, '');
+  assert.strictEqual(defaults.lmstudio_manual_model, false);
 });

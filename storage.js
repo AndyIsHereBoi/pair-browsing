@@ -3,7 +3,8 @@ class ConversationStorage {
   constructor() {
     this.DB_NAME = 'conversationDB';
     this.STORE_NAME = 'conversations';
-    this.VERSION = 1;
+    this.DISPLAY_STORE_NAME = 'displayMessages';
+    this.VERSION = 2;
     this.db = null;
   }
 
@@ -28,6 +29,9 @@ class ConversationStorage {
         if (!db.objectStoreNames.contains(this.STORE_NAME)) {
           db.createObjectStore(this.STORE_NAME, { keyPath: 'timestamp' });
         }
+        if (!db.objectStoreNames.contains(this.DISPLAY_STORE_NAME)) {
+          db.createObjectStore(this.DISPLAY_STORE_NAME, { keyPath: 'timestamp' });
+        }
       };
     });
   }
@@ -35,18 +39,23 @@ class ConversationStorage {
   async clearHistory() {
     await this.init();
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([this.STORE_NAME], 'readwrite');
+      const transaction = this.db.transaction(
+        [this.STORE_NAME, this.DISPLAY_STORE_NAME],
+        'readwrite'
+      );
       const store = transaction.objectStore(this.STORE_NAME);
+      const displayStore = transaction.objectStore(this.DISPLAY_STORE_NAME);
       const request = store.clear();
+      const displayRequest = displayStore.clear();
 
-      request.onsuccess = () => {
+      transaction.oncomplete = () => {
         console.log('Conversation history cleared');
         resolve();
       };
 
-      request.onerror = () => {
+      transaction.onerror = () => {
         console.error('Failed to clear history');
-        reject(request.error);
+        reject(request.error || displayRequest.error);
       };
     });
   }
@@ -91,6 +100,46 @@ class ConversationStorage {
 
       request.onerror = () => {
         console.error('Failed to get history');
+        reject(request.error);
+      };
+    });
+  }
+
+  // Display history is separate from model-context history. It only carries the
+  // user prompts and the assistant's visible replies, so the chat can be restored
+  // in the UI without polluting the model's context window.
+  async addDisplayEntry(entry) {
+    await this.init();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([this.DISPLAY_STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(this.DISPLAY_STORE_NAME);
+      const request = store.add({
+        role: entry.role,
+        content: entry.content,
+        timestamp: Date.now(),
+      });
+      request.onsuccess = () => resolve();
+      request.onerror = () => {
+        console.error('Failed to add display entry');
+        reject(request.error);
+      };
+    });
+  }
+
+  async getDisplayHistory() {
+    await this.init();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([this.DISPLAY_STORE_NAME], 'readonly');
+      const store = transaction.objectStore(this.DISPLAY_STORE_NAME);
+      const request = store.getAll();
+      request.onsuccess = () => {
+        const history = request.result
+          .sort((a, b) => a.timestamp - b.timestamp)
+          .map(({ timestamp, ...entry }) => entry);
+        resolve(history);
+      };
+      request.onerror = () => {
+        console.error('Failed to get display history');
         reject(request.error);
       };
     });

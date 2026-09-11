@@ -2,194 +2,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      background-color: #f5f5f5;
-    }
-
-    .header {
-      display: flex;
-      justify-content: flex-end;
-      padding: 8px 16px;
-      background-color: white;
-      border-bottom: 1px solid #e0e0e0;
-      gap: 8px;
-    }
-
-    .header-button {
-      background: none;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      padding: 6px 12px;
-      font-size: 13px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      color: #666;
-      transition: all 0.2s;
-    }
-
-    .header-button:hover {
-      background-color: #f5f5f5;
-      border-color: #ccc;
-      color: #333;
-    }
-
-    .header-button svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .message {
-      max-width: 85%;
-      margin: 0;
-      display: flex;
-    }
-
-    .user-message {
-      align-self: flex-end;
-    }
-
-    .assistant-message {
-      align-self: flex-start;
-    }
-
-    .message-content {
-      padding: 8px 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      line-height: 1.4;
-      word-wrap: break-word;
-    }
-
-    .user-message .message-content {
-      background-color: #007AFF;
-      color: white;
-      border-bottom-right-radius: 4px;
-    }
-
-    .assistant-message .message-content {
-      background-color: white;
-      color: #1a1a1a;
-      border-bottom-left-radius: 4px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    .input-container {
-      padding: 16px;
-      background-color: white;
-      border-top: 1px solid #e0e0e0;
-      display: flex;
-      gap: 8px;
-    }
-
-    #prompt {
-      flex: 1;
-      padding: 8px 12px;
-      border: 1px solid #e0e0e0;
-      border-radius: 20px;
-      font-size: 14px;
-      outline: none;
-      resize: none;
-      max-height: 120px;
-      min-height: 20px;
-      line-height: 1.4;
-    }
-
-    #prompt:focus {
-      border-color: #007AFF;
-    }
-
-    #sendBtn {
-      background-color: #007AFF;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 8px 16px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
-
-    #sendBtn:hover {
-      background-color: #0056b3;
-    }
-
-    #sendBtn:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-
-    /* Debug screenshot styles */
-    .debug-screenshot {
-      max-width: 100%;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #e0e0e0;
-    }
-
-    /* Scrollbar styling */
-    #messages::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    #messages::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    #messages::-webkit-scrollbar-thumb {
-      background-color: rgba(0, 0, 0, 0.2);
-      border-radius: 4px;
-    }
-
-    #messages::-webkit-scrollbar-thumb:hover {
-      background-color: rgba(0, 0, 0, 0.3);
-    }
-  </style>
+  <link rel="stylesheet" href="sidebar.css">
 </head>
 <body>
   <div class="header">
-    <button id="resetBtn" class="header-button">
+    <button id="newChatBtn">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-        <path d="M3 3v5h5"/>
+        <path d="M12 5v14M5 12h14"/>
       </svg>
-      Reset
+      New chat
     </button>
-    <button id="optionsBtn" class="header-button">
+    <button id="optionsBtn" class="icon-button" title="Settings">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
-      Options
     </button>
   </div>
   <div id="messages"></div>
+  <div id="messageQueue" class="message-queue" hidden></div>
   <div class="input-container">
-    <textarea 
-      id="prompt" 
-      placeholder="Type a message..."
-      rows="1"
-      autofocus
-    ></textarea>
-    <button id="sendBtn">Send</button>
+    <div class="composer">
+      <textarea 
+        id="prompt" 
+        placeholder="Type a message..."
+        rows="1"
+        autofocus
+      ></textarea>
+      <div class="composer-right">
+        <div class="action-row">
+          <button id="sendBtn" class="send-btn" title="Send">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>
+            </svg>
+          </button>
+          <button id="stopBtn" class="stop-btn" title="Stop" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="7" y="7" width="10" height="10" rx="2"/>
+            </svg>
+          </button>
+        </div>
+        <div class="thinking-row">
+          <select id="thinkingSelect" class="thinking-select" title="Thinking level">
+            <option value="standard">Standard</option>
+            <option value="low">Low</option>
+            <option value="high">High</option>
+            <option value="max">Max</option>
+          </select>
+        </div>
+      </div>
+    </div>
   </div>
   <script src="sidebar.js"></script>
 </body>

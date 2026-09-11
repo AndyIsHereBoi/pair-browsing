@@ -7,37 +7,24 @@
     "activeTab",
     "storage",
     "tabs",
-    "scripting",
+    "debugger",
     "sidePanel",
     "unlimitedStorage",
     "windows"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "https://zystudio.zybooks.com/*"
   ],
   "action": {
-    "default_title": "Toggle Sidebar"
+    "default_title": "Pair Browsing",
+    "default_popup": "options.html"
   },
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
-  "content_scripts": [{
-    "js": ["contentScript.js", "lib/buildDomTree.js"],
-    "matches": ["<all_urls>"]
-  }],
   "side_panel": {
     "default_path": "sidebar.html"
-  },
-  "web_accessible_resources": [{
-    "resources": [
-      "sidebar.css",
-      "sidebar.js"
-    ],
-    "matches": ["<all_urls>"]
-  }, {
-    "resources": ["storage.js"],
-    "matches": ["<all_urls>"]
-  }],
-  "options_page": "options.html"
+  }
 }

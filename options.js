@@ -1,11 +1,12 @@
 // Default configuration
 const DEFAULT_OPTIONS = {
-  provider: "openai",
-  openai_api_key: "",
-  openai_model: "gpt-4o-mini",
-  gemini_api_key: "",
-  gemini_model: "gemini-2.0-flash-exp",
-  ollama_model: "llama3.2-vision",
+  provider: "lmstudio",
+  lmstudio_endpoint: "http://localhost:1234",
+  lmstudio_model: "",
+  lmstudio_manual_model: false,
+  lmstudio_manual_model_name: "",
+  deepseek_api_key: "",
+  deepseek_reasoning_mode: "standard",
   system_prompt: `You are a precise browser automation agent that interacts with websites through structured commands. Your role is to:
 1. Analyze the provided webpage screenshot and elements and structure
 2. Think through the user's request and identify if you need more than one step to accomplish it. 
@@ -125,48 +126,47 @@ Remember: Your responses must be valid JSON matching the specified format. Each 
 };
 
 // Saves options to chrome.storage
-function saveOptions() {
+function saveOptions(showStatus = true) {
   // Get current values
   const provider = document.getElementById('provider').value || DEFAULT_OPTIONS.provider;
-  const openaiKey = document.getElementById('openaiKey').value || DEFAULT_OPTIONS.openai_api_key;
-  const openaiModel = document.getElementById('openaiModel').value || DEFAULT_OPTIONS.openai_model;
-  const geminiKey = document.getElementById('geminiKey').value || DEFAULT_OPTIONS.gemini_api_key;
-  const geminiModel = document.getElementById('geminiModel').value || DEFAULT_OPTIONS.gemini_model;
-  const ollamaModel = document.getElementById('ollamaModel').value || DEFAULT_OPTIONS.ollama_model;
-  const systemPrompt = document.getElementById('systemPrompt').value || DEFAULT_OPTIONS.system_prompt;
+  const lmstudioEndpoint = document.getElementById('lmstudioEndpoint').value || DEFAULT_OPTIONS.lmstudio_endpoint;
+  const lmstudioModel = document.getElementById('lmstudioModel').value || DEFAULT_OPTIONS.lmstudio_model;
+  const lmstudioManualModel = document.getElementById('lmstudioManualModel').checked;
+  const lmstudioManualModelName = document.getElementById('lmstudioManualModelName').value.trim();
+  const deepseekKey = document.getElementById('deepseekKey').value || DEFAULT_OPTIONS.deepseek_api_key;
+  const deepseekReasoningMode = document.getElementById('deepseekReasoningMode').value || DEFAULT_OPTIONS.deepseek_reasoning_mode;
   const debugMode = document.getElementById('debugMode').checked;
   const agentMode = document.getElementById('agentMode').checked;
   const cursorLabel = document.getElementById('cursorLabel').value || DEFAULT_OPTIONS.cursor_label;
 
   // Update UI with default values if empty
   if (!document.getElementById('provider').value) document.getElementById('provider').value = DEFAULT_OPTIONS.provider;
-  if (!document.getElementById('openaiModel').value) document.getElementById('openaiModel').value = DEFAULT_OPTIONS.openai_model;
-  if (!document.getElementById('geminiModel').value) document.getElementById('geminiModel').value = DEFAULT_OPTIONS.gemini_model;
-  if (!document.getElementById('ollamaModel').value) document.getElementById('ollamaModel').value = DEFAULT_OPTIONS.ollama_model;
-  if (!document.getElementById('systemPrompt').value) document.getElementById('systemPrompt').value = DEFAULT_OPTIONS.system_prompt;
+  if (!document.getElementById('lmstudioEndpoint').value) document.getElementById('lmstudioEndpoint').value = DEFAULT_OPTIONS.lmstudio_endpoint;
   if (!document.getElementById('cursorLabel').value) document.getElementById('cursorLabel').value = DEFAULT_OPTIONS.cursor_label;
 
   chrome.storage.local.set(
     {
       provider,
-      openai_api_key: openaiKey,
-      openai_model: openaiModel,
-      gemini_api_key: geminiKey,
-      gemini_model: geminiModel,
-      ollama_model: ollamaModel,
-      system_prompt: systemPrompt,
+      lmstudio_endpoint: lmstudioEndpoint,
+      lmstudio_model: lmstudioModel,
+      lmstudio_manual_model: lmstudioManualModel,
+      lmstudio_manual_model_name: lmstudioManualModelName,
+      deepseek_api_key: deepseekKey,
+      deepseek_reasoning_mode: deepseekReasoningMode,
       debug_mode: debugMode,
       agent_mode: agentMode,
       cursor_label: cursorLabel,
     },
     () => {
-      const status = document.getElementById('status');
-      status.textContent = 'Options saved.';
-      status.style.display = 'block';
-      status.className = 'success';
-      setTimeout(() => {
-        status.style.display = 'none';
-      }, 2000);
+      if (showStatus) {
+        const status = document.getElementById('status');
+        status.textContent = 'Options saved.';
+        status.style.display = 'block';
+        status.className = 'success';
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 2000);
+      }
     }
   );
 }
@@ -176,27 +176,127 @@ function saveOptions() {
 function restoreOptions() {
   chrome.storage.local.get(DEFAULT_OPTIONS, (items) => {
     document.getElementById("provider").value = items.provider;
-    document.getElementById("openaiKey").value = items.openai_api_key;
-    document.getElementById("openaiModel").value = items.openai_model;
-    document.getElementById("geminiKey").value = items.gemini_api_key;
-    document.getElementById("geminiModel").value = items.gemini_model;
-    document.getElementById("ollamaModel").value = items.ollama_model;
-    document.getElementById("systemPrompt").value = items.system_prompt;
+    document.getElementById("lmstudioEndpoint").value = items.lmstudio_endpoint;
+    document.getElementById("lmstudioModel").value = items.lmstudio_model;
+    document.getElementById("lmstudioManualModel").checked = items.lmstudio_manual_model;
+    document.getElementById("lmstudioManualModelName").value = items.lmstudio_manual_model_name;
+    document.getElementById("deepseekKey").value = items.deepseek_api_key;
+    document.getElementById("deepseekReasoningMode").value = items.deepseek_reasoning_mode;
     document.getElementById("debugMode").checked = items.debug_mode;
     document.getElementById("agentMode").checked = items.agent_mode;
     document.getElementById("cursorLabel").value = items.cursor_label;
+    chrome.storage.local.set({
+      provider: items.provider,
+      lmstudio_endpoint: items.lmstudio_endpoint,
+      lmstudio_model: items.lmstudio_model,
+      deepseek_api_key: items.deepseek_api_key,
+      deepseek_reasoning_mode: items.deepseek_reasoning_mode,
+      debug_mode: items.debug_mode,
+      agent_mode: items.agent_mode,
+      cursor_label: items.cursor_label,
+    });
     updateVisibility();
+    updateManualModelVisibility();
+    loadLMStudioModels();
   });
+}
+
+let saveTimer = null;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => saveOptions(false), 300);
+}
+
+async function loadLMStudioModels() {
+  const endpointInput = document.getElementById('lmstudioEndpoint');
+  const modelSelect = document.getElementById('lmstudioModel');
+  const endpoint = endpointInput.value || DEFAULT_OPTIONS.lmstudio_endpoint;
+  const selectedModel = modelSelect.value;
+
+  try {
+    const response = await fetch(`${endpoint.replace(/\/$/, '')}/api/v1/models`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    const models = (data.models || data.data || [])
+      .filter((model) => typeof model === 'string' || model.type === 'llm' || !model.type)
+      .map((model) => typeof model === 'string'
+        ? { key: model, displayName: model }
+        : {
+            key: model.key || model.id,
+            displayName: model.display_name || model.key || model.id,
+            loaded: Array.isArray(model.loaded_instances) && model.loaded_instances.length > 0,
+          })
+      .filter((model) => model.key);
+
+    modelSelect.innerHTML = '';
+    const loadedGroup = document.createElement('optgroup');
+    loadedGroup.label = 'Currently loaded models';
+    const availableGroup = document.createElement('optgroup');
+    availableGroup.label = 'Available models';
+    models.forEach((model) => {
+      const option = document.createElement('option');
+      option.value = model.key;
+      option.textContent = model.displayName;
+      (model.loaded ? loadedGroup : availableGroup).appendChild(option);
+    });
+    if (loadedGroup.children.length) modelSelect.appendChild(loadedGroup);
+    if (availableGroup.children.length) modelSelect.appendChild(availableGroup);
+
+    if (selectedModel && !models.some((model) => model.key === selectedModel)) {
+      const option = document.createElement('option');
+      option.value = selectedModel;
+      option.textContent = `${selectedModel} (saved)`;
+      modelSelect.appendChild(option);
+    }
+    if (selectedModel) modelSelect.value = selectedModel;
+  } catch (error) {
+    console.warn('Unable to load LM Studio models:', error);
+  }
 }
 
 // Show/hide provider sections based on selection
 function updateVisibility() {
   const provider = document.getElementById('provider').value;
-  document.getElementById('openai-section').style.display = provider === 'openai' ? 'block' : 'none';
-  document.getElementById('gemini-section').style.display = provider === 'gemini' ? 'block' : 'none';
-  document.getElementById('ollama-section').style.display = provider === 'ollama' ? 'block' : 'none';
+  document.getElementById('lmstudio-section').style.display = provider === 'lmstudio' ? 'block' : 'none';
+  document.getElementById('deepseek-section').style.display = provider === 'deepseek' ? 'block' : 'none';
+}
+
+function updateManualModelVisibility() {
+  document.getElementById('lmstudioManualModelNameGroup').style.display =
+    document.getElementById('lmstudioManualModel').checked ? 'block' : 'none';
 }
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('save').addEventListener('click', saveOptions);
-document.getElementById('provider').addEventListener('change', updateVisibility); 
+document.getElementById('provider').addEventListener('change', () => {
+  updateVisibility();
+  if (document.getElementById('provider').value === 'lmstudio') loadLMStudioModels();
+});
+document.getElementById('lmstudioEndpoint').addEventListener('change', loadLMStudioModels);
+document.getElementById('lmstudioManualModel').addEventListener('change', () => {
+  updateManualModelVisibility();
+  scheduleSave();
+});
+[
+  'provider',
+  'lmstudioEndpoint',
+  'lmstudioModel',
+  'lmstudioManualModelName',
+  'deepseekKey',
+  'deepseekReasoningMode',
+  'debugMode',
+  'agentMode',
+  'cursorLabel',
+].forEach((id) => {
+  document.getElementById(id).addEventListener('input', scheduleSave);
+  document.getElementById(id).addEventListener('change', scheduleSave);
+});
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => saveOptions(false));
+}
+document.getElementById('openSidebar').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab?.id) {
+    await chrome.sidePanel.open({ tabId: tab.id });
+  }
+});

@@ -3,12 +3,17 @@
 <head>
   <title>Extension Options</title>
   <style>
+    html, body {
+      width: 620px;
+      box-sizing: border-box;
+    }
+
     body {
       padding: 20px;
       font-family: Arial, sans-serif;
     }
     .container {
-      max-width: 500px;
+      max-width: none;
       margin: 0 auto;
     }
     .form-group {
@@ -70,9 +75,8 @@
     <div class="form-group">
       <label for="provider">AI Provider:</label>
       <select id="provider">
-        <option value="openai">OpenAI</option>
-        <option value="gemini">Google Gemini</option>
-        <option value="ollama">Ollama (Local)</option>
+        <option value="lmstudio">LM Studio (Local)</option>
+        <option value="deepseek">DeepSeek API (DOM only)</option>
       </select>
     </div>
 
@@ -81,44 +85,51 @@
       <input type="text" id="cursorLabel" placeholder="Enter cursor label (e.g., AI Assistant)">
     </div>
 
-    <div id="openai-section" class="provider-section">
-      <h3>OpenAI Settings</h3>
+    <div id="lmstudio-section" class="provider-section">
+      <h3>LM Studio Settings</h3>
       <div class="form-group">
-        <label for="openaiKey">OpenAI API Key:</label>
-        <input type="text" id="openaiKey" placeholder="Enter your OpenAI API key">
+        <label for="lmstudioEndpoint">LM Studio Server:</label>
+        <input type="url" id="lmstudioEndpoint" placeholder="http://localhost:1234">
       </div>
       <div class="form-group">
-        <label for="openaiModel">Model Name:</label>
-        <input type="text" id="openaiModel" placeholder="Enter model name (e.g., gpt-4o-mini)">
-      </div>
-    </div>
-
-    <div id="gemini-section" class="provider-section">
-      <h3>Google Gemini Settings</h3>
-      <div class="form-group">
-        <label for="geminiKey">Gemini API Key:</label>
-        <input type="text" id="geminiKey" placeholder="Enter your Gemini API key">
+        <label for="lmstudioModel">Model Name:</label>
+        <select id="lmstudioModel">
+          <option value="">Connect to load models</option>
+        </select>
       </div>
       <div class="form-group">
-        <label for="geminiModel">Model Name:</label>
-        <input type="text" id="geminiModel" placeholder="Enter model name (e.g., gemini-2.0-flash-exp)">
+        <label>
+          <input type="checkbox" id="lmstudioManualModel">
+          Use a manual model name
+        </label>
       </div>
-    </div>
-
-    <div id="ollama-section" class="provider-section">
-      <h3>Ollama Settings</h3>
-      <div class="form-group">
-        <label for="ollamaModel">Model Name:</label>
-        <input type="text" id="ollamaModel" placeholder="Enter model name (e.g., llama3.2-vision)" value="llama3.2-vision">
+      <div class="form-group" id="lmstudioManualModelNameGroup" style="display: none;">
+        <label for="lmstudioManualModelName">Manual Model Name:</label>
+        <input type="text" id="lmstudioManualModelName" placeholder="publisher/model-name">
       </div>
       <p class="info-text" style="color: #666; font-size: 0.9em;">
-        Ollama runs locally on http://localhost:11434. Make sure you have Ollama installed and running.
+        Start the local server in LM Studio and enable a model with tool-calling support. Models are read from the local API; no model-load request is sent.
       </p>
     </div>
 
-    <div class="form-group">
-      <label for="systemPrompt">System Prompt:</label>
-      <textarea id="systemPrompt" placeholder="Enter system prompt"></textarea>
+    <div id="deepseek-section" class="provider-section">
+      <h3>DeepSeek Settings</h3>
+      <div class="form-group">
+        <label for="deepseekKey">DeepSeek API Key:</label>
+        <input type="text" id="deepseekKey" placeholder="Enter your DeepSeek API key">
+      </div>
+      <div class="form-group">
+        <label for="deepseekReasoningMode">Reasoning Mode:</label>
+        <select id="deepseekReasoningMode">
+          <option value="standard">Minimal (no thinking)</option>
+          <option value="low">Thinking (low effort, 4096-token limit)</option>
+          <option value="high">Thinking (high effort)</option>
+          <option value="max">Thinking (maximum effort)</option>
+        </select>
+      </div>
+      <p class="info-text" style="color: #666; font-size: 0.9em;">
+        DeepSeek is limited to DOM information. Screenshots are not sent, so it cannot evaluate visual layout or image-only controls.
+      </p>
     </div>
 
     <div class="form-group">
@@ -136,6 +147,7 @@
     </div>
 
     <button id="save">Save</button>
+    <button id="openSidebar" type="button">Open Assistant</button>
     <div id="status"></div>
   </div>
   <script src="options.js"></script>
